@@ -20,29 +20,26 @@ from sklearn.compose import ColumnTransformer
 from sklearn.preprocessing import StandardScaler, OneHotEncoder
 from sklearn.pipeline import Pipeline
 
-# Baixando o dataset
+# Baixando, Carregandoo e Inspecionando o dataset
+
 path = kagglehub.dataset_download("geomack/spotifyclassification")
 print("Path to dataset files:", path)
 
-# Carregando o CSV
 df = pd.read_csv(f"{path}/data.csv")
 
-# Inspecionando o dataset
 print(df.head())
 print(df.info())
 
-# Separando features e rótulo
 X = df.drop("target", axis=1)
 y = df["target"]
 
-# Dividindo os dados
-X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.3, random_state=42)
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.8, random_state=42)
 
-# Identificando tipos de colunas
+# Identificando tipos de colunas e Criando o transformador de colunas
+
 num_cols = X.select_dtypes(include=["int64", "float64"]).columns
 cat_cols = X.select_dtypes(include=["object", "category"]).columns
 
-# Criando o transformador de colunas
 preprocessor = ColumnTransformer(
     transformers=[
         ("num", StandardScaler(), num_cols),
@@ -54,7 +51,6 @@ preprocessor = ColumnTransformer(
 X_train_processed = preprocessor.fit_transform(X_train)
 X_test_processed = preprocessor.transform(X_test)
 
-# Agora seus dados estão prontos pra treinar qualquer modelo! Exemplo:
 print("Shape dos dados processados:")
 print("X_train:", X_train_processed.shape)
 print("X_test:", X_test_processed.shape)
@@ -101,7 +97,7 @@ from sklearn.metrics import accuracy_score
 accuracies_rf = []
 
 for i in range(10):
-    rf = RandomForestClassifier(random_state=i)  # random_state varia pra cada run
+    rf = RandomForestClassifier(random_state=i)  # random_state varia pra cada teste
     rf.fit(X_train_processed, y_train)
     y_pred = rf.predict(X_test_processed)
     acc = accuracy_score(y_test, y_pred)
@@ -118,7 +114,7 @@ from sklearn.metrics import accuracy_score
 accuracies_xgb = []
 
 for i in range(10):
-    xgb = XGBClassifier(eval_metric='logloss', random_state=i)  # REMOVIDO: use_label_encoder
+    xgb = XGBClassifier(eval_metric='logloss', random_state=i)
     xgb.fit(X_train_processed, y_train)
     y_pred = xgb.predict(X_test_processed)
     acc = accuracy_score(y_test, y_pred)
@@ -133,7 +129,7 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 import numpy as np
 
-# Dicionário com os resultados
+# Dicionário os resultados e Convertendo para DataFrame pra visualização suave
 results = {
     "KNN": accuracies_knn,
     "SVM": accuracies_svm,
@@ -141,10 +137,8 @@ results = {
     "XGBoost": accuracies_xgb
 }
 
-# Convertendo para DataFrame pra visualização mais suave
 results_df = pd.DataFrame(results)
 
-# Estatísticas descritivas
 print("\n=== MÉTRICAS DE DESEMPENHO DOS MODELOS ===")
 print(results_df.describe().T[["mean", "std"]].rename(columns={"mean": "Média", "std": "Desvio Padrão"}))
 
